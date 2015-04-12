@@ -9,8 +9,9 @@
  *
  *  @package    PHP-PayPal-IPN
  *  @author     Micah Carrick
+ *  @author     Joseph Persie
  *  @copyright  (c) 2011 - Micah Carrick
- *  @version    2.0.5
+ *  @version    2.0.6
  *  @license    http://opensource.org/licenses/gpl-3.0.html
  */
 class IpnListener {
@@ -24,12 +25,11 @@ class IpnListener {
     public $use_curl = true;     
     
     /**
-     *  If true, explicitly sets cURL to use SSL version 3. Use this if cURL
-     *  is compiled with GnuTLS SSL.
+     *  If true, explicitly sets cURL to use tls. Use this if cURL
      *
      *  @var boolean
      */
-    public $force_ssl_v3 = true;     
+    public $force_tls = true;     
    
     /**
      *  If true, cURL will use the CURLOPT_FOLLOWLOCATION to follow any 
@@ -102,8 +102,8 @@ class IpnListener {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HEADER, true);
         
-        if ($this->force_ssl_v3) {
-            curl_setopt($ch, CURLOPT_SSLVERSION, 3);
+        if ($this->force_tls) {
+            curl_setopt($ch, CURLOPT_SSLVERSION, 4);
         }
         
         $this->response = curl_exec($ch);
@@ -258,7 +258,7 @@ class IpnListener {
     public function processIpn($post_data=null) {
 
         $encoded_data = 'cmd=_notify-validate';
-        
+
         if ($post_data === null) { 
             // use raw POST data 
             if (!empty($_POST)) {
@@ -276,9 +276,15 @@ class IpnListener {
             }
         }
 
-        if ($this->use_curl) $this->curlPost($encoded_data); 
-        else $this->fsockPost($encoded_data);
-        
+        if ($this->use_curl) 
+        {
+            $this->curlPost($encoded_data); 
+        }
+        else 
+        {
+            $this->fsockPost($encoded_data);
+        }
+
         if (strpos($this->response_status, '200') === false) {
             throw new Exception("Invalid response status: ".$this->response_status);
         }

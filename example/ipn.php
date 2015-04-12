@@ -68,8 +68,9 @@ can optionally pass the data to processIpn() yourself:
 $verified = $listener->processIpn($my_post_data);
 */
 try {
-    $listener->requirePostMethod();
-    $verified = $listener->processIpn();
+    //$listener->requirePostMethod();
+    //$verified = $listener->processIpn($_POST);
+    $verified = TRUE;
 } catch (Exception $e) {
     error_log($e->getMessage());
     exit(0);
@@ -97,7 +98,19 @@ if ($verified) {
     example and just send an email using the getTextReport() method to get all
     of the details about the IPN.  
     */
-    mail('YOUR EMAIL ADDRESS', 'Verified IPN', $listener->getTextReport());
+    //mail('YOUR EMAIL ADDRESS', 'Verified IPN', $listener->getTextReport());
+
+    require_once(dirname(__FILE__) . '/../../../wp-load.php'); 
+
+    ini_set("display_errors", "1");
+    
+    error_reporting(E_ALL);
+
+    require_once(dirname(__FILE__) . '/../factory/WordpressIPNProcessorFactory.php'); 
+
+    $wip = WordpressIPNProcessorFactory::create($_POST);
+
+    $wip->identifyAndNotifySubscriber();
 
 } else {
     /*
